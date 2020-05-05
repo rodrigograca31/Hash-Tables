@@ -45,12 +45,20 @@ class HashTable:
         Implement this, and/or FNV-1.
         """
 
+        hash = 5381
+        for n in key.encode():
+            # hash = ((hash << 5) + hash) + n
+            hash = hash * 33 + n
+
+        return hash
+        # return hash & 0xFFFFFFFF
+
     def hash_index(self, key):
         """
         Take an arbitrary key and return a valid integer index
         between within the storage capacity of the hash table.
         """
-        return self.fnv1(key) % self.capacity
+        # return self.fnv1(key) % self.capacity
         return self.djb2(key) % self.capacity
 
     def put(self, key, value):
@@ -73,7 +81,7 @@ class HashTable:
                     return
                 current = current.next
 
-            current.next = HashTableEntry(key, value)
+            # current.next = HashTableEntry(key, value)
         else:
             self.storage[hi] = HashTableEntry(key, value)
 
@@ -86,7 +94,31 @@ class HashTable:
         Implement this.
         """
 
-        self.storage[self.hash_index(key)] = None
+        hi = self.hash_index(key)
+        print(hi)
+
+        # if its a single node just delete it
+        if self.storage[hi].next == None:
+            if self.storage[hi].key == key:
+                self.storage[hi] = None
+            else:
+                print("WARNING: no key")
+        else:
+            current = self.storage[hi]
+            prev = current
+            while current.next and current.key != key:
+                prev = current
+                current = current.next
+
+            # if its the first link in the list
+            if (current.key == self.storage[hi].key):
+                print("1")
+                self.storage[hi] = current.next
+            elif (current.key == key):
+                print("2")
+                prev.next = current.next
+            else:
+                print("WARNING: no key")
 
     def get(self, key):
         """
@@ -116,44 +148,46 @@ class HashTable:
         Implement this.
         """
         self.capacity *= 2
-
         newarr = [None] * self.capacity
 
         for i, v in enumerate(self.storage):
-            # print(v)
             while v:
                 hi = self.hash_index(v.key)
-                # print(v.next)
-                # print(hi)
                 if newarr[hi]:
                     current = newarr[hi]
-                    # while current.next:
-                    #     print(current.key)
-                    #     current = current.next
-                    # current.next = HashTableEntry(v.key, v.value)
-                    # return
+                    while current.next:
+                        current = current.next
 
+                    current.next = HashTableEntry(v.key, v.value)
                 else:
-                    newarr[hi] = v
-                # print(v.next)
+                    newarr[hi] = HashTableEntry(v.key, v.value)
+
                 v = v.next
 
-        # for ar in newarr:
-        #     print(ar)
-
         self.storage = newarr
+
+        # Solution 2 - Much cleaner
+        # newHashTable = HashTable(self.capacity*2)
+        # for i, v in enumerate(self.storage):
+        #     while v:
+        #         newHashTable.put(v.key, v.value)
+        #         v = v.next
+
+        # self.capacity = newHashTable.capacity
+        # self.storage = newHashTable.storage
 
 
 if __name__ == "__main__":
     ht = HashTable(2)
 
-    ht.put("line_1", "Tiny hash table")
-    ht.put("line_2", "Filled beyond capacity")
-    ht.put("line_3", "Linked list saves the day!")
+    ht.put("line_1", "111")
+    ht.put("line_2", "222")
+    ht.put("line_3", "333")
     ht.put("line_4", "sss")
     ht.put("line_5", "ddd")
     ht.put("line_6", "ggg")
     ht.put("line_7", "hhh")
+    ht.put("line_12", "jjj")
 
     print("")
 
@@ -174,32 +208,34 @@ if __name__ == "__main__":
 
     print(f"\nResized from {old_capacity} to {new_capacity}.\n")
 
-    # Test if data intact after resizing
-    print(ht.get("line_1"))
-    print(ht.get("line_2"))
-    print(ht.get("line_3"))
-    print(ht.get("line_4"))
-    print(ht.get("line_5"))
-    print(ht.get("line_6"))
-    print(ht.get("line_7"))
+    print("1: ", ht.storage[1].value)
+    print("1: ", ht.storage[1].next.value)
+
+    print("3: ", ht.storage[3].value)
+    print("3: ", ht.storage[3].next.value)
+    print("3: ", ht.storage[3].next.next.value)
 
     print("")
+    for i, v in enumerate(ht.storage):
+        while v:
+            print(i, v.value)
+            v = v.next
+    print("")
+    ht.delete("line_8")
+    print("")
+    for i, v in enumerate(ht.storage):
+        while v:
+            print(i, v.value)
+            v = v.next
+    print("")
 
-    # ht = HashTable(0x10000)
+    # Test if data intact after resizing
+    # print(ht.get("line_1"))
+    # print(ht.get("line_2"))
+    # print(ht.get("line_3"))
+    # print(ht.get("line_4"))
+    # print(ht.get("line_5"))
+    # print(ht.get("line_6"))
+    # print(ht.get("line_7"))
 
-    # ht.put("key-0", "val-0")
-    # ht.put("key-1", "val-1")
-    # ht.put("key-2", "val-2")
-
-    # ht.put("key-0", "new-val-0")
-    # ht.put("key-1", "new-val-1")
-    # ht.put("key-2", "new-val-2")
-
-    # return_value = ht.get("key-0")
-    # print(return_value, "new-val-0")
-    # return_value = ht.get("key-1")
-    # print(return_value, "new-val-1")
-    # return_value = ht.get("key-2")
-    # print(return_value, "new-val-2")
-
-    # print("gg")
+    # print("")
