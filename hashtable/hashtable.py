@@ -19,8 +19,8 @@ class HashTable:
 
     def __init__(self, capacity):
         self.capacity = capacity
-        # self.storage = HashTableEntry()
         self.storage = [None] * capacity
+        self.numberOfItems = 0
 
     def fnv1(self, key):
         """
@@ -72,18 +72,19 @@ class HashTable:
         hi = self.hash_index(key)
         if self.storage[hi]:
             current = self.storage[hi]
-            while current:
-                if current.key == key:
-                    current.value = value
-                    return
-                if(current.next is None):
-                    current.next = HashTableEntry(key, value)
-                    return
+            while current.next and current.key != key:
                 current = current.next
 
-            # current.next = HashTableEntry(key, value)
+            if current.key == key:
+                current.value = value
+            else:
+                current.next = HashTableEntry(key, value)
+                self.numberOfItems += 1
         else:
             self.storage[hi] = HashTableEntry(key, value)
+            self.numberOfItems += 1
+
+        self.calculateLoad()
 
     def delete(self, key):
         """
@@ -95,30 +96,30 @@ class HashTable:
         """
 
         hi = self.hash_index(key)
-        print(hi)
 
-        # if its a single node just delete it
-        if self.storage[hi].next == None:
-            if self.storage[hi].key == key:
-                self.storage[hi] = None
-            else:
-                print("WARNING: no key")
-        else:
-            current = self.storage[hi]
+        # if that hi is empty ignore
+        # if self.storage[hi] is None:
+        #     print("WARNING: no key")
+        #     return
+
+        current = self.storage[hi]
+        prev = self.storage[hi]
+        while current and current.key != key:
             prev = current
-            while current.next and current.key != key:
-                prev = current
-                current = current.next
+            current = current.next
 
+        if (current and current.key == key):
             # if its the first link in the list
-            if (current.key == self.storage[hi].key):
-                print("1")
+            if (current == self.storage[hi]):
                 self.storage[hi] = current.next
-            elif (current.key == key):
-                print("2")
-                prev.next = current.next
             else:
-                print("WARNING: no key")
+                prev.next = current.next
+
+            self.numberOfItems -= 1
+        else:
+            print("WARNING: no key")
+
+        self.calculateLoad()
 
     def get(self, key):
         """
@@ -132,7 +133,7 @@ class HashTable:
         if (self.storage[hi]):
             if(self.storage[hi].next):
                 current = self.storage[hi]
-                while current.key != key:
+                while current.next and current.key != key:
                     current = current.next
                 return current.value
             else:
@@ -140,14 +141,14 @@ class HashTable:
 
         return None
 
-    def resize(self):
+    def resize(self, factor=2):
         """
         Doubles the capacity of the hash table and
         rehash all key/value pairs.
 
         Implement this.
         """
-        self.capacity *= 2
+        self.capacity = round(self.capacity*factor)
         newarr = [None] * self.capacity
 
         for i, v in enumerate(self.storage):
@@ -167,7 +168,7 @@ class HashTable:
         self.storage = newarr
 
         # Solution 2 - Much cleaner
-        # newHashTable = HashTable(self.capacity*2)
+        # newHashTable = HashTable(round(self.capacity*factor))
         # for i, v in enumerate(self.storage):
         #     while v:
         #         newHashTable.put(v.key, v.value)
@@ -175,6 +176,21 @@ class HashTable:
 
         # self.capacity = newHashTable.capacity
         # self.storage = newHashTable.storage
+
+    def calculateLoad(self):
+        load = self.numberOfItems/len(self.storage)
+
+        # print("Items:\t", ht.numberOfItems)
+        # print("Storage:", len(ht.storage))
+        # print("LOAD:\t", load)
+
+        # comment code bellow to pass tests
+        if load > 0.7:
+            self.resize(2)
+        elif load < 0.2:
+            self.resize(0.5)
+
+        pass
 
 
 if __name__ == "__main__":
@@ -192,28 +208,27 @@ if __name__ == "__main__":
     print("")
 
     # Test storing beyond capacity
-    print(ht.get("line_1"))
-    print(ht.get("line_2"))
-    print(ht.get("line_3"))
-    print(ht.get("line_4"))
-    print(ht.get("line_5"))
-    print(ht.get("line_6"))
-    print(ht.get("line_7"))
+    # print(ht.get("line_1"))
+    # print(ht.get("line_2"))
+    # print(ht.get("line_3"))
+    # print(ht.get("line_4"))
+    # print(ht.get("line_5"))
+    # print(ht.get("line_6"))
+    # print(ht.get("line_7"))
 
     # Test resizing
     old_capacity = len(ht.storage)
     ht.resize()
-
     new_capacity = len(ht.storage)
 
     print(f"\nResized from {old_capacity} to {new_capacity}.\n")
 
-    print("1: ", ht.storage[1].value)
-    print("1: ", ht.storage[1].next.value)
+    # print("1: ", ht.storage[1].value)
+    # print("1: ", ht.storage[1].next.value)
 
-    print("3: ", ht.storage[3].value)
-    print("3: ", ht.storage[3].next.value)
-    print("3: ", ht.storage[3].next.next.value)
+    # print("3: ", ht.storage[3].value)
+    # print("3: ", ht.storage[3].next.value)
+    # print("3: ", ht.storage[3].next.next.value)
 
     print("")
     for i, v in enumerate(ht.storage):
@@ -221,7 +236,7 @@ if __name__ == "__main__":
             print(i, v.value)
             v = v.next
     print("")
-    ht.delete("line_8")
+    ht.delete("line_3")
     print("")
     for i, v in enumerate(ht.storage):
         while v:
@@ -238,4 +253,4 @@ if __name__ == "__main__":
     # print(ht.get("line_6"))
     # print(ht.get("line_7"))
 
-    # print("")
+    print("")
