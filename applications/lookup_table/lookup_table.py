@@ -7,14 +7,14 @@ cache = {}
 
 def slowfun(x, y):
 
-    if str(x)+"_"+str(x) in cache.keys():
-        return cache[str(x)+"_"+str(x)]
+    if str(x)+"_"+str(y) in cache.keys():
+        return cache[str(x)+"_"+str(y)]
     # TODO: Modify to produce the same results, but much faster
     v = math.pow(x, y)
     v = math.factorial(v)
     v //= (x + y)
     v %= 982451653
-    cache[str(x)+"_"+str(x)] = v
+    cache[str(x)+"_"+str(y)] = v
     return v
 
 
